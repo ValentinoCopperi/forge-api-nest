@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id               Int                @id @default(autoincrement())
+  name             String
+  description      String?
+  updatedAt        DateTime           @default(now())
+  OrganizationUser OrganizationUser[]
+  Project          Project[]
+}
+
+model OrganizationUser {
+  id             Int                  @id @default(autoincrement())
+  organizationId Int
+  userId         Int
+  role           OrganizationUserRole @default(MEMBER)
+  Organization   Organization         @relation(fields: [organizationId], references: [id])
+  User           User                 @relation(fields: [userId], references: [id])
+
+  @@index([organizationId])
+  @@index([userId])
+}
+
+model Project {
+  id             Int          @id @default(autoincrement())
+  name           String
+  description    String?
+  organizationId Int
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @default(now())
+  managerId      Int
+  User           User         @relation(fields: [managerId], references: [id])
+  Organization   Organization @relation(fields: [organizationId], references: [id])
+  Task           Task[]
+
+  @@index([createdAt])
+  @@index([organizationId])
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Task {
+  id                           Int           @id @default(autoincrement())
+  title                        String
+  description                  String?
+  status                       TaskStatus    @default(PENDING)
+  category                     TaskCategory  @default(OTRO)
+  createdAt                    DateTime      @default(now())
+  deadline                     DateTime?
+  designatedBy                 Int?
+  designatedTo                 Int?
+  priority                     TaskPriority  @default(MEDIUM)
+  projectId                    Int?
+  updatedAt                    DateTime      @default(now())
+  User_Task_designatedByToUser User?         @relation("Task_designatedByToUser", fields: [designatedBy], references: [id])
+  User_Task_designatedToToUser User?         @relation("Task_designatedToToUser", fields: [designatedTo], references: [id])
+  Project                      Project?      @relation(fields: [projectId], references: [id])
+  TaskComment                  TaskComment[]
+
+  @@index([designatedBy])
+  @@index([designatedTo])
+  @@index([projectId])
+}
+
+model TaskComment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  taskId    Int
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  Task      Task     @relation(fields: [taskId], references: [id])
+  User      User     @relation(fields: [userId], references: [id])
+
+  @@index([taskId])
+  @@index([userId])
+}
+
+model User {
+  id                           Int                @id @default(autoincrement())
+  name                         String
+  email                        String             @unique
+  passwordHash                 String
+  avatarUrl                    String?
+  OrganizationUser             OrganizationUser[]
+  Project                      Project[]
+  Session                      Session[]
+  Task_Task_designatedByToUser Task[]             @relation("Task_designatedByToUser")
+  Task_Task_designatedToToUser Task[]             @relation("Task_designatedToToUser")
+  TaskComment                  TaskComment[]
+  UserRole                     UserRole[]
+}
+
+model UserRole {
+  userId Int
+  role   Role
+  User   User @relation(fields: [userId], references: [id])
+
+  @@id([userId, role])
+}
+
+enum OrganizationUserRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum Role {
+  DIRECTOR
+  GERENTE
+  EMPLEADO
+}
+
+enum TaskCategory {
+  DESARROLLO
+  DISENO
+  TESTING
+  DOCUMENTACION
+  OTRO
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+}
