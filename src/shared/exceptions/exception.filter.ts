@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { Logger } from 'pino';
-import { PINO_LOGGER } from '../logger/logger';
+import { PINO_LOGGER } from '@/shared/logger/logger';
 
 @Catch()
 export class CatchEverythingFilter implements ExceptionFilter {

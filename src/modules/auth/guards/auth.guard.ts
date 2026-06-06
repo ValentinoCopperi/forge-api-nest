@@ -5,13 +5,20 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { JwtService } from '@nestjs/jwt';
+import { Request } from 'express';
+import { IS_PUBLIC_KEY } from '@/modules/auth/decorators';
+import { I_JwtPayload } from '@/modules/auth/types';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  constructor(
+    private reflector: Reflector,
+    private jwtService: JwtService,
+  ) { }
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -20,22 +27,29 @@ export class AuthGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
+    const token = this.extractTokenFromHeader(request);
 
-    const token_header = request.headers['authorization'];
+    if (!token) throw new UnauthorizedException();
 
-    if (!token_header) throw new UnauthorizedException();
+    try {
+      const payload = await this.jwtService.verifyAsync<I_JwtPayload>(token);
 
-    const [type, token] = token_header.split(' ');
+      request.user = payload;
 
-    const validateToken = this.validateToken(token);
+      return true;
 
-    if (!validateToken) throw new UnauthorizedException();
+    } catch (error) {
 
-    return true;
+      throw new UnauthorizedException();
+
+    }
+
   }
 
-  private validateToken(token: string): boolean {
-    return token === 'secret-token';
+  private extractTokenFromHeader(request: Request): string | undefined {
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
   }
+
 }

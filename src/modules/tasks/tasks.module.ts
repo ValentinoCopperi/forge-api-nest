@@ -1,19 +1,15 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { TasksService } from './tasks.service';
+import { LoggerMiddleware, TokenMiddleware } from '@/shared/middlewares';
+import { CreateTaskCron } from '@/modules/tasks/jobs';
 import { TasksController } from './tasks.controller';
-import { LoggerMiddleware } from 'src/shared/middlewares/logger.middleware';
-import { TokenMiddleware } from 'src/shared/middlewares/token.middleware';
-import { CreateTaskCron } from './jobs/create-task.cron';
+import { TasksService } from './tasks.service';
 
 @Module({
   controllers: [TasksController],
   providers: [TasksService, CreateTaskCron],
 })
 export class TasksModule implements NestModule {
-  //Manera de aplicar Middlewares a nivel Module.
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(LoggerMiddleware,TokenMiddleware)
-      .forRoutes(TasksController);
+    consumer.apply(LoggerMiddleware, TokenMiddleware).forRoutes(TasksController);
   }
-} 
+}

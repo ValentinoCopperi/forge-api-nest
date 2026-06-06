@@ -1,7 +1,7 @@
 import { Injectable, Inject, NestMiddleware, HttpException, HttpStatus } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
 import { Logger } from "pino";
-import { PINO_LOGGER } from "../logger/logger";
+import { PINO_LOGGER } from '@/shared/logger/logger';
 import { CACHE_MANAGER, Cache } from "@nestjs/cache-manager";
 import { ConfigService } from "@nestjs/config";
 

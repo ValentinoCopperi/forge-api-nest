@@ -1,12 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Observable } from "rxjs";
-import { Roles } from "../decorators/roles.decorator";
+import { Roles } from "@/modules/auth/decorators";
 import { Role } from "generated/prisma/enums";
-
-
-
-
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -35,8 +31,5 @@ export class RolesGuard implements CanActivate {
     private matchRoles(roles: Role[], userRoles: Role[]): boolean {
         return roles.some(role => userRoles.includes(role));
     }
-
-
-
 
 }

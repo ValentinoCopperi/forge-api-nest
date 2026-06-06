@@ -1,12 +1,9 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
-import { OrganizationsService } from './organizations.service';
-import { CreateOrganizationDto } from './dto/create-organization.dto';
-import { UpdateOrganizationDto } from './dto/update-organization.dto';
-import { AuthGuard } from 'src/modules/auth/guards/auth.guard';
-import { Roles } from 'src/modules/auth/decorators/roles.decorator';
 import { Role } from 'generated/prisma/enums';
-import { RolesGuard } from 'src/modules/auth/guards/roles.guard';
-import { Public } from 'src/modules/auth/decorators/public.decorator';
+import { Public, Roles } from '@/modules/auth/decorators';
+import { RolesGuard } from '@/modules/auth/guards';
+import { CreateOrganizationDto, UpdateOrganizationDto } from '@/modules/organizations/dto';
+import { OrganizationsService } from './organizations.service';
 
 
 @UseGuards(RolesGuard)

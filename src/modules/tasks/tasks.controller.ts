@@ -5,13 +5,12 @@ import {
   Post,
   UseInterceptors,
   UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
+import { Public } from '@/modules/auth/decorators';
+import { ResponseInterceptor } from '@/shared/interceptors';
+import { CreateTaskDto, createTaskSchema } from '@/modules/tasks/dto';
+import { ZodValidationPipe } from '@/modules/tasks/pipes';
 import { TasksService } from './tasks.service';
-import { CreateTaskDto, createTaskSchema } from './dto/create-task.dto';
-import { ZodValidationPipe } from './pipes/zod-validation.pipe';
-import {ResponseInterceptor } from 'src/shared/interceptors/response.interceptor';
-import { Public } from 'src/modules/auth/decorators/public.decorator';
 
 @Controller('tasks')
 export class TasksController {

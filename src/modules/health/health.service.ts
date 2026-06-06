@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/shared/prisma/prisma.service';
-import { HealthCheckResponseDto } from './dto/health-check-response.dto';
+import { PrismaService } from '@/shared/prisma';
+import { HealthCheckResponseDto } from '@/modules/health/dto';
 
 @Injectable()
 export class HealthService {

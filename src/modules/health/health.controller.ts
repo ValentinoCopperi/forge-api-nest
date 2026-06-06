@@ -1,8 +1,8 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
-import { Public } from 'src/modules/auth/decorators/public.decorator';
+import { Public } from '@/modules/auth/decorators';
+import { HealthCheckResponseDto } from '@/modules/health/dto';
 import { HealthService } from './health.service';
-import { HealthCheckResponseDto } from './dto/health-check-response.dto';
 
 @Controller()
 export class HealthController {

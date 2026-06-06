@@ -1,21 +1,28 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestApplication, NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-import { AppModule } from './app.module';
-import { RequestIdMiddleware } from './shared/middlewares/request-id.middleware';
-import { LoggerMiddleware } from './shared/middlewares/logger.middleware';
-import { RateLimitMiddleware } from './shared/middlewares/rate-limit.middleware';
-import { SwaggerModule } from '@nestjs/swagger';
-import { DocumentBuilder } from '@nestjs/swagger';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { AppModule } from '@/app.module';
+import {
+  LoggerMiddleware,
+  RateLimitMiddleware,
+  RequestIdMiddleware,
+} from '@/shared';
 
 const GLOBAL_PREFIX = '/api/v1';
 
-
 async function bootstrap() {
-
-
   const app = await NestFactory.create<NestApplication>(AppModule);
 
   app.setGlobalPrefix(GLOBAL_PREFIX);
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   app.useBodyParser('json', { limit: '10mb' });
 
@@ -36,6 +43,15 @@ async function bootstrap() {
     .setDescription('Forge API Nest')
     .setVersion('1.0')
     .addTag('Forge')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Enter access token from login/register',
+      },
+      'access-token',
+    )
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
