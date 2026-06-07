@@ -7,3 +7,6 @@ export interface I_JwtPayload {
     avatarUrl: string | null;
     roles: $Enums.Role[];
 }
+
+
+export type UserRequest = I_JwtPayload;

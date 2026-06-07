@@ -8,12 +8,22 @@ datasource db {
 }
 
 model Organization {
-  id               Int                @id @default(autoincrement())
-  name             String
-  description      String?
-  updatedAt        DateTime           @default(now())
-  OrganizationUser OrganizationUser[]
-  Project          Project[]
+  id                                      Int                @id @default(autoincrement())
+  name                                    String
+  description                             String?
+  updatedAt                               DateTime           @default(now())
+  createdAt                               DateTime           @default(now())
+  createdByUserId                         Int
+  deletedAt                               DateTime?
+  updatedByUserId                         Int?
+  User_Organization_createdByUserIdToUser User               @relation("Organization_createdByUserIdToUser", fields: [createdByUserId], references: [id])
+  User_Organization_updatedByUserIdToUser User?              @relation("Organization_updatedByUserIdToUser", fields: [updatedByUserId], references: [id])
+  OrganizationUser                        OrganizationUser[]
+  Project                                 Project[]
+
+  @@index([createdByUserId])
+  @@index([deletedAt])
+  @@index([updatedByUserId])
 }
 
 model OrganizationUser {
@@ -21,27 +31,37 @@ model OrganizationUser {
   organizationId Int
   userId         Int
   role           OrganizationUserRole @default(MEMBER)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @default(now())
   Organization   Organization         @relation(fields: [organizationId], references: [id])
   User           User                 @relation(fields: [userId], references: [id])
 
+  @@unique([organizationId, userId])
   @@index([organizationId])
   @@index([userId])
 }
 
 model Project {
-  id             Int          @id @default(autoincrement())
-  name           String
-  description    String?
-  organizationId Int
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @default(now())
-  managerId      Int
-  User           User         @relation(fields: [managerId], references: [id])
-  Organization   Organization @relation(fields: [organizationId], references: [id])
-  Task           Task[]
+  id                                 Int           @id @default(autoincrement())
+  name                               String
+  description                        String?
+  organizationId                     Int
+  createdAt                          DateTime      @default(now())
+  updatedAt                          DateTime      @default(now())
+  managerId                          Int
+  createdByUserId                    Int?
+  deletedAt                          DateTime?
+  status                             ProjectStatus @default(ACTIVE)
+  User_Project_createdByUserIdToUser User?         @relation("Project_createdByUserIdToUser", fields: [createdByUserId], references: [id])
+  User_Project_managerIdToUser       User          @relation("Project_managerIdToUser", fields: [managerId], references: [id])
+  Organization                       Organization  @relation(fields: [organizationId], references: [id])
+  Task                               Task[]
 
   @@index([createdAt])
   @@index([organizationId])
+  @@index([createdByUserId])
+  @@index([deletedAt])
+  @@index([managerId])
 }
 
 model Session {
@@ -51,6 +71,7 @@ model Session {
   expiresAt DateTime
   revoked   Boolean  @default(false)
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
   User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -69,6 +90,9 @@ model Task {
   priority                     TaskPriority  @default(MEDIUM)
   projectId                    Int?
   updatedAt                    DateTime      @default(now())
+  deletedAt                    DateTime?
+  createdBy                    Int
+  User_Task_createdByToUser    User          @relation("Task_createdByToUser", fields: [createdBy], references: [id])
   User_Task_designatedByToUser User?         @relation("Task_designatedByToUser", fields: [designatedBy], references: [id])
   User_Task_designatedToToUser User?         @relation("Task_designatedToToUser", fields: [designatedTo], references: [id])
   Project                      Project?      @relation(fields: [projectId], references: [id])
@@ -77,41 +101,52 @@ model Task {
   @@index([designatedBy])
   @@index([designatedTo])
   @@index([projectId])
+  @@index([deletedAt])
+  @@index([status])
 }
 
 model TaskComment {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   content   String
   taskId    Int
   userId    Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
-  Task      Task     @relation(fields: [taskId], references: [id])
-  User      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now())
+  deletedAt DateTime?
+  Task      Task      @relation(fields: [taskId], references: [id])
+  User      User      @relation(fields: [userId], references: [id])
 
   @@index([taskId])
   @@index([userId])
+  @@index([deletedAt])
 }
 
 model User {
-  id                           Int                @id @default(autoincrement())
-  name                         String
-  email                        String             @unique
-  passwordHash                 String
-  avatarUrl                    String?
-  OrganizationUser             OrganizationUser[]
-  Project                      Project[]
-  Session                      Session[]
-  Task_Task_designatedByToUser Task[]             @relation("Task_designatedByToUser")
-  Task_Task_designatedToToUser Task[]             @relation("Task_designatedToToUser")
-  TaskComment                  TaskComment[]
-  UserRole                     UserRole[]
+  id                                              Int                @id @default(autoincrement())
+  name                                            String
+  email                                           String             @unique
+  passwordHash                                    String
+  avatarUrl                                       String?
+  createdAt                                       DateTime           @default(now())
+  updatedAt                                       DateTime           @default(now())
+  Organization_Organization_createdByUserIdToUser Organization[]     @relation("Organization_createdByUserIdToUser")
+  Organization_Organization_updatedByUserIdToUser Organization[]     @relation("Organization_updatedByUserIdToUser")
+  OrganizationUser                                OrganizationUser[]
+  Project_Project_createdByUserIdToUser           Project[]          @relation("Project_createdByUserIdToUser")
+  Project_Project_managerIdToUser                 Project[]          @relation("Project_managerIdToUser")
+  Session                                         Session[]
+  Task_Task_createdByToUser                       Task[]             @relation("Task_createdByToUser")
+  Task_Task_designatedByToUser                    Task[]             @relation("Task_designatedByToUser")
+  Task_Task_designatedToToUser                    Task[]             @relation("Task_designatedToToUser")
+  TaskComment                                     TaskComment[]
+  UserRole                                        UserRole[]
 }
 
 model UserRole {
-  userId Int
-  role   Role
-  User   User @relation(fields: [userId], references: [id])
+  userId     Int
+  role       Role
+  assignedAt DateTime @default(now())
+  User       User     @relation(fields: [userId], references: [id])
 
   @@id([userId, role])
 }
@@ -147,4 +182,15 @@ enum TaskStatus {
   PENDING
   IN_PROGRESS
   DONE
+  OVERDUE
+}
+
+enum ProjectStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+  DELETED
+  PAUSED
+  CANCELLED
+  COMPLETED
 }

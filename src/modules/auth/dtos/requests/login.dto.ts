@@ -9,7 +9,7 @@ import {
 export class LoginDto {
   @ApiProperty({
     description: 'Registered email address',
-    example: 'jane.doe@company.com',
+    example: 'valencope@gmail.com',
     format: 'email',
   })
   @Transform(({ value }) =>
@@ -20,7 +20,7 @@ export class LoginDto {
 
   @ApiProperty({
     description: 'Account password',
-    example: 'Str0ngP@ssw0rd',
+    example: 'valencope',
     minLength: AUTH_PASSWORD_MIN_LENGTH,
     maxLength: AUTH_PASSWORD_MAX_LENGTH,
     format: 'password',

@@ -1,40 +1,67 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, HttpCode, HttpStatus, ParseIntPipe } from '@nestjs/common';
 import { Role } from 'generated/prisma/enums';
-import { Public, Roles } from '@/modules/auth/decorators';
+import { Roles, UserCurrent } from '@/modules/auth/decorators';
 import { RolesGuard } from '@/modules/auth/guards';
-import { CreateOrganizationDto, UpdateOrganizationDto } from '@/modules/organizations/dto';
+import { AddUserToOrganizationDto, CreateOrganizationDto, OrganizationCreateResponseDto, OrganizationFindOneResponseDto, OrganizationsGetAllResponseDto } from '@/modules/organizations/dto';
 import { OrganizationsService } from './organizations.service';
+import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
+import { UserRequest } from '@/modules/auth/types';
+import { OrganizationCreateResponse, OrganizationFindOneResponse, OrganizationsGetAll } from '@/modules/organizations/types';
+import { OrganizationActionGuard } from './guards/organization.action.guard';
+import { RequireOrgAction } from './decorators/action.decorator';
 
 
-@UseGuards(RolesGuard)
+@UseGuards(RolesGuard, OrganizationActionGuard)
 @Controller('organizations')
 export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
 
   @Post()
-  create(@Body() createOrganizationDto: CreateOrganizationDto) {
-    return this.organizationsService.create(createOrganizationDto);
+  @Roles([Role.DIRECTOR])
+  @HttpCode(HttpStatus.CREATED)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Create a new organization' })
+  @ApiBody({ type: CreateOrganizationDto })
+  @ApiCreatedResponse({ type: OrganizationCreateResponseDto })
+  create(@Body() createOrganizationDto: CreateOrganizationDto , @UserCurrent() user: UserRequest) : Promise<OrganizationCreateResponse> {
+    return this.organizationsService.create({ createOrganizationDto, user });
   }
 
   @Get()
-  @Public()
-  @Roles([Role.DIRECTOR])
-  findAll() {
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get all organizations' })
+  @ApiOkResponse({ type: OrganizationsGetAllResponseDto, isArray: true })
+  findAll(): Promise<OrganizationsGetAll[]> {
     return this.organizationsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.organizationsService.findOne(+id);
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get an organization by id' })
+  @ApiOkResponse({ type: OrganizationFindOneResponseDto })
+  @ApiParam({ name: 'id', type: Number, description: 'The id of the organization', example: 1 })
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<OrganizationFindOneResponse> {
+    return this.organizationsService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOrganizationDto: UpdateOrganizationDto) {
-    return this.organizationsService.update(+id, updateOrganizationDto);
+
+  @Post('add-user')
+  @RequireOrgAction('add-user')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Add a user to an organization' })
+  @ApiBody({ type: AddUserToOrganizationDto })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  addUserToOrganization(@Body() addUserToOrganizationDto: AddUserToOrganizationDto): Promise<void> {
+    return this.organizationsService.addUserToOrganization(addUserToOrganizationDto);
   }
+
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.organizationsService.remove(+id);
+  @ApiBearerAuth('access-token')
+  @ApiParam({ name: 'id', type: Number, description: 'The id of the organization', example: 1 })
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.organizationsService.remove(id);
   }
 }
