@@ -1,6 +1,9 @@
 import { NotFoundException } from '@nestjs/common';
 import { Prisma } from 'generated/prisma/client';
-import { AddUserToOrganizationDto } from '@/modules/organizations/dto';
+type UserIdentifier = {
+    userId?: number;
+    email?: string;
+};
 
 type PrismaUserDelegate = {
     findUnique(args: Prisma.UserFindUniqueArgs): Promise<{ id: number } | null>;
@@ -8,7 +11,7 @@ type PrismaUserDelegate = {
 
 export async function resolveTargetUserId(
     prisma: PrismaUserDelegate,
-    { userId, email }: Pick<AddUserToOrganizationDto, 'userId' | 'email'>,
+    { userId, email }: UserIdentifier,
 ): Promise<number> {
     if (userId != null) {
         const user = await prisma.findUnique({

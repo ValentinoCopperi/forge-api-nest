@@ -1,25 +1,38 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto, UpdateUserDto } from '@/modules/users/dto';
-
+import { StorageService } from '@/shared';
+import { PrismaService } from '@/shared/prisma/prisma.service';
+import { UserRequest } from '@/modules/auth/types/auth.jwt.types';
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
-  }
+  
+  constructor(
+    private readonly storageService: StorageService,
+    private readonly prismaService: PrismaService,
+    private readonly configService: ConfigService
+  ) {}
 
-  findAll() {
-    return `This action returns all users`;
-  }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
+  async uploadAvatar(data: {
+    user: UserRequest,
+    file: Express.Multer.File
+  }) : Promise<void> {
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+    const { user, file } = data;
+    const { sub, avatarUrl } = user;
+
+    if (avatarUrl) {
+      const key = avatarUrl.split(`${this.configService.getOrThrow<string>('S3_BUCKET')}/`)[1];
+      await this.storageService.deleteFile(key);
+    }
+
+    const key = this.storageService.createKey(file.originalname, sub!);
+    const url = await this.storageService.uploadFile(file, key);
+
+    await this.prismaService.user.update({
+      where: { id: sub! },
+      data: { avatarUrl: url },
+    });
   }
 }

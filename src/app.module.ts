@@ -17,6 +17,7 @@ import {
   envValidationSchema,
   LoggerModule,
   PrismaModule,
+  StorageModule,
   RateLimitMiddleware,
   ResponseInterceptor,
 } from '@/shared';
@@ -43,6 +44,7 @@ import {
     CacheModule.register(),
     LoggerModule,
     PrismaModule,
+    StorageModule,
     HealthModule,
     TasksModule,
     AuthModule,

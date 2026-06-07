@@ -10,7 +10,7 @@ import {
 import { OrganizationUserRole } from 'generated/prisma/enums';
 import { ExactlyOneUserIdentifier } from '@/modules/organizations/validators/exactly-one-user-identifier.validator';
 
-export class AddUserToOrganizationDto {
+export class UpdateUserOrganizationRoleDto {
     @ApiProperty({
         description: 'The id of the organization',
         example: 1,
@@ -21,7 +21,7 @@ export class AddUserToOrganizationDto {
     organizationId: number;
 
     @ApiProperty({
-        description: 'The id of the user to add',
+        description: 'The id of the user to update',
         example: 1,
         required: false,
     })
@@ -33,7 +33,7 @@ export class AddUserToOrganizationDto {
     userId?: number;
 
     @ApiProperty({
-        description: 'The email of the user to add',
+        description: 'The email of the user to update',
         example: 'user@example.com',
         required: false,
         format: 'email',
@@ -46,9 +46,9 @@ export class AddUserToOrganizationDto {
     email?: string;
 
     @ApiProperty({
-        description: 'The role of the user in the organization',
+        description: 'The new role of the user in the organization',
         enum: OrganizationUserRole,
-        example: OrganizationUserRole.MEMBER,
+        example: OrganizationUserRole.ADMIN,
     })
     @IsEnum(OrganizationUserRole)
     role: OrganizationUserRole;

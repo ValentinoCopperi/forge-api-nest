@@ -2,15 +2,13 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
     IsEmail,
-    IsEnum,
     IsInt,
     IsOptional,
     IsPositive,
 } from 'class-validator';
-import { OrganizationUserRole } from 'generated/prisma/enums';
 import { ExactlyOneUserIdentifier } from '@/modules/organizations/validators/exactly-one-user-identifier.validator';
 
-export class AddUserToOrganizationDto {
+export class RemoveUserFromOrganizationDto {
     @ApiProperty({
         description: 'The id of the organization',
         example: 1,
@@ -21,7 +19,7 @@ export class AddUserToOrganizationDto {
     organizationId: number;
 
     @ApiProperty({
-        description: 'The id of the user to add',
+        description: 'The id of the user to remove',
         example: 1,
         required: false,
     })
@@ -33,7 +31,7 @@ export class AddUserToOrganizationDto {
     userId?: number;
 
     @ApiProperty({
-        description: 'The email of the user to add',
+        description: 'The email of the user to remove',
         example: 'user@example.com',
         required: false,
         format: 'email',
@@ -44,12 +42,4 @@ export class AddUserToOrganizationDto {
     )
     @IsEmail({}, { message: 'El email no es válido' })
     email?: string;
-
-    @ApiProperty({
-        description: 'The role of the user in the organization',
-        enum: OrganizationUserRole,
-        example: OrganizationUserRole.MEMBER,
-    })
-    @IsEnum(OrganizationUserRole)
-    role: OrganizationUserRole;
 }

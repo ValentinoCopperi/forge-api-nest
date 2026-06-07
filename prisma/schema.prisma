@@ -33,7 +33,7 @@ model OrganizationUser {
   role           OrganizationUserRole @default(MEMBER)
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @default(now())
-  Organization   Organization         @relation(fields: [organizationId], references: [id])
+  Organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   User           User                 @relation(fields: [userId], references: [id])
 
   @@unique([organizationId, userId])
@@ -54,7 +54,7 @@ model Project {
   status                             ProjectStatus @default(ACTIVE)
   User_Project_createdByUserIdToUser User?         @relation("Project_createdByUserIdToUser", fields: [createdByUserId], references: [id])
   User_Project_managerIdToUser       User          @relation("Project_managerIdToUser", fields: [managerId], references: [id])
-  Organization                       Organization  @relation(fields: [organizationId], references: [id])
+  Organization                       Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   Task                               Task[]
 
   @@index([createdAt])
@@ -95,7 +95,7 @@ model Task {
   User_Task_createdByToUser    User          @relation("Task_createdByToUser", fields: [createdBy], references: [id])
   User_Task_designatedByToUser User?         @relation("Task_designatedByToUser", fields: [designatedBy], references: [id])
   User_Task_designatedToToUser User?         @relation("Task_designatedToToUser", fields: [designatedTo], references: [id])
-  Project                      Project?      @relation(fields: [projectId], references: [id])
+  Project                      Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
   TaskComment                  TaskComment[]
 
   @@index([designatedBy])
@@ -113,7 +113,7 @@ model TaskComment {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now())
   deletedAt DateTime?
-  Task      Task      @relation(fields: [taskId], references: [id])
+  Task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
   User      User      @relation(fields: [userId], references: [id])
 
   @@index([taskId])

@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { AddUserToOrganizationDto, CreateOrganizationDto } from '@/modules/organizations/dto';
+import { AddUserToOrganizationDto, CreateOrganizationDto, RemoveUserFromOrganizationDto, UpdateOrganizationDto, UpdateUserOrganizationRoleDto } from '@/modules/organizations/dto';
 import { resolveTargetUserId } from '@/modules/organizations/helpers/resolve-target-user.helper';
 import { UserRequest } from '@/modules/auth/types';
 import { OrganizationCreateResponse, organizationCreateSelect, OrganizationFindOneResponse, organizationFindOneSelect, OrganizationsGetAll, organizationsGetAllSelect } from '@/modules/organizations/types';
@@ -84,7 +84,119 @@ export class OrganizationsService {
     }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} organization`;
+  async removeUserFromOrganization(
+    removeUserFromOrganizationDto: RemoveUserFromOrganizationDto,
+  ): Promise<void> {
+    const { organizationId } = removeUserFromOrganizationDto;
+    const targetUserId = await resolveTargetUserId(
+      this.prisma.user,
+      removeUserFromOrganizationDto,
+    );
+
+    try {
+      await this.prisma.organizationUser.delete({
+        where: {
+          organizationId_userId: {
+            organizationId,
+            userId: targetUserId,
+          },
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(
+          `User with id ${targetUserId} not found in organization with id ${organizationId}`,
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  async updateUserOrganizationRole(
+    updateUserOrganizationRoleDto: UpdateUserOrganizationRoleDto,
+  ): Promise<void> {
+    const { organizationId, role } = updateUserOrganizationRoleDto;
+    const targetUserId = await resolveTargetUserId(
+      this.prisma.user,
+      updateUserOrganizationRoleDto,
+    );
+
+    try {
+      await this.prisma.organizationUser.update({
+        where: {
+          organizationId_userId: {
+            organizationId,
+            userId: targetUserId,
+          },
+        },
+        data: {
+          role,
+          updatedAt: new Date(),
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(
+          `User with id ${targetUserId} not found in organization with id ${organizationId}`,
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  async update({
+    id,
+    updateOrganizationDto,
+    user,
+  }: {
+    id: number;
+    updateOrganizationDto: UpdateOrganizationDto;
+    user: UserRequest;
+  }): Promise<OrganizationCreateResponse> {
+    try {
+      return await this.prisma.organization.update({
+        where: { id },
+        data: {
+          ...updateOrganizationDto,
+          updatedByUserId: user.sub,
+          updatedAt: new Date(),
+        },
+        select: organizationCreateSelect,
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(`Organization with id ${id} not found`);
+      }
+
+      throw error;
+    }
+  }
+
+  async remove(id: number): Promise<void> {
+    try {
+      await this.prisma.organization.delete({
+        where: { id },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(`Organization with id ${id} not found`);
+      }
+
+      throw error;
+    }
   }
 }
