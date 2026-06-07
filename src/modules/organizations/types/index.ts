@@ -1,4 +1,1 @@
-
-
-
 export * from './organizations.types';

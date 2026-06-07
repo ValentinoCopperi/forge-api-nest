@@ -5,36 +5,39 @@ import { PINO_LOGGER } from '@/shared/logger/logger';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
-    private readonly logger: Logger;
+  private readonly logger: Logger;
 
-    constructor(@Inject(PINO_LOGGER) logger: Logger) {
-        this.logger = logger.child({ logger: 'LoggerMiddleware' });
-    }
+  constructor(@Inject(PINO_LOGGER) logger: Logger) {
+    this.logger = logger.child({ logger: 'LoggerMiddleware' });
+  }
 
-    use(req: Request, res: Response, next: NextFunction) {
-        const executeTime = new Date();
+  use(req: Request, res: Response, next: NextFunction) {
+    const executeTime = new Date();
 
+    //res.on("finish") -> Ejecuta la funcion anonima una vez la response haya sido enviada
+    res.on('finish', () => {
+      const duration = new Date().getTime() - executeTime.getTime();
 
-        //res.on("finish") -> Ejecuta la funcion anonima una vez la response haya sido enviada
-        res.on("finish", () => {
+      const logContext = {
+        method: req.method,
+        url: req.url,
+        statusCode: res.statusCode,
+        requestId: req.request_id,
+        duration,
+      };
 
-            const duration = new Date().getTime() - executeTime.getTime();
+      const level =
+        res.statusCode > 199 && res.statusCode < 300
+          ? 'info'
+          : res.statusCode > 399 && res.statusCode < 500
+            ? 'warn'
+            : 'error';
 
-            const logContext = {
-                method: req.method,
-                url: req.url,
-                statusCode: res.statusCode,
-                requestId: req.request_id,
-                duration,
-            }
+      this.logger[level](logContext);
 
-            const level = res.statusCode > 199 && res.statusCode < 300 ? 'info' : res.statusCode > 399 && res.statusCode < 500 ? 'warn' : 'error';
+      return;
+    });
 
-            this.logger[level](logContext);
-
-            return;
-        })
-        
-        next();
-    }
+    next();
+  }
 }

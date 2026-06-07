@@ -32,4 +32,4 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
   ],
 })
-export class AuthModule { }
+export class AuthModule {}

@@ -19,7 +19,12 @@ import {
 } from '@nestjs/swagger';
 import { Public, UserCurrent } from '@/modules/auth/decorators';
 import { I_JwtPayload } from '@/modules/auth/types';
-import { LoginDto, RegisterDto, TokenResponseDto, UserResponseDto } from '@/modules/auth/dtos';
+import {
+  LoginDto,
+  RegisterDto,
+  TokenResponseDto,
+  UserResponseDto,
+} from '@/modules/auth/dtos';
 import { AuthService } from './auth.service';
 
 @ApiTags('Auth')
@@ -71,7 +76,10 @@ export class AuthController {
     summary: 'Get current user',
     description: 'Returns the authenticated user from the JWT payload.',
   })
-  @ApiOkResponse({ description: 'Current authenticated user', type: UserResponseDto })
+  @ApiOkResponse({
+    description: 'Current authenticated user',
+    type: UserResponseDto,
+  })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid access token' })
   getMe(@UserCurrent() user: I_JwtPayload): Promise<UserResponseDto> {
     return this.authService.getMe(user);

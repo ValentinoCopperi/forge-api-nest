@@ -1,20 +1,40 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { AddUserToOrganizationDto, CreateOrganizationDto, RemoveUserFromOrganizationDto, UpdateOrganizationDto, UpdateUserOrganizationRoleDto } from '@/modules/organizations/dto';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  AddUserToOrganizationDto,
+  CreateOrganizationDto,
+  RemoveUserFromOrganizationDto,
+  UpdateOrganizationDto,
+  UpdateUserOrganizationRoleDto,
+} from '@/modules/organizations/dto';
 import { resolveTargetUserId } from '@/modules/organizations/helpers/resolve-target-user.helper';
 import { UserRequest } from '@/modules/auth/types';
-import { OrganizationCreateResponse, organizationCreateSelect, OrganizationFindOneResponse, organizationFindOneSelect, OrganizationsGetAll, organizationsGetAllSelect } from '@/modules/organizations/types';
+import {
+  OrganizationCreateResponse,
+  organizationCreateSelect,
+  OrganizationFindOneResponse,
+  organizationFindOneSelect,
+  OrganizationsGetAll,
+  organizationsGetAllSelect,
+} from '@/modules/organizations/types';
 import { PrismaService } from '@/shared';
 import { Prisma } from 'generated/prisma/client';
 import { OrganizationUserRole } from 'generated/prisma/enums';
 
 @Injectable()
 export class OrganizationsService {
+  constructor(private readonly prisma: PrismaService) {}
 
-  constructor(private readonly prisma: PrismaService) { }
-
-  create({ createOrganizationDto, user }: { createOrganizationDto: CreateOrganizationDto, user: UserRequest }): Promise<OrganizationCreateResponse> {
-
-
+  create({
+    createOrganizationDto,
+    user,
+  }: {
+    createOrganizationDto: CreateOrganizationDto;
+    user: UserRequest;
+  }): Promise<OrganizationCreateResponse> {
     return this.prisma.organization.create({
       data: {
         ...createOrganizationDto,
@@ -27,20 +47,16 @@ export class OrganizationsService {
         },
       },
       select: organizationCreateSelect,
-    })
-
+    });
   }
 
   findAll(): Promise<OrganizationsGetAll[]> {
-
     return this.prisma.organization.findMany({
       select: organizationsGetAllSelect,
-    })
-
+    });
   }
 
   async findOne(id: number): Promise<OrganizationFindOneResponse> {
-
     const organization = await this.prisma.organization.findUnique({
       where: { id },
       select: organizationFindOneSelect,
@@ -49,7 +65,7 @@ export class OrganizationsService {
     if (!organization) {
       throw new NotFoundException(`Organization with id ${id} not found`);
     }
-    
+
     return organization;
   }
 

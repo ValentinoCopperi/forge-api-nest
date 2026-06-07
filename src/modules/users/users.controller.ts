@@ -1,16 +1,36 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInterceptors, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UploadedFile,
+  UseInterceptors,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserCurrent } from '@/modules/auth/decorators/user.decorator';
 import { UserRequest } from '@/modules/auth/types/auth.jwt.types';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 
 const AVATAR_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 const AVATAR_MIME_TYPES = /^image\/(jpeg|png|webp)$/;
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @Post('upload')
   @ApiOperation({
@@ -24,7 +44,7 @@ export class UsersController {
         file: { type: 'string', format: 'binary' },
       },
     },
-  })  
+  })
   @ApiResponse({
     status: 200,
     description: 'Avatar uploaded successfully',
@@ -41,9 +61,10 @@ export class UsersController {
           new FileTypeValidator({ fileType: AVATAR_MIME_TYPES }),
         ],
       }),
-    ) file: Express.Multer.File,
-    @UserCurrent() user: UserRequest
-  ) : Promise<void>{
+    )
+    file: Express.Multer.File,
+    @UserCurrent() user: UserRequest,
+  ): Promise<void> {
     return this.usersService.uploadAvatar({ user, file });
   }
 }

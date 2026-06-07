@@ -12,11 +12,10 @@ import { I_JwtPayload } from '@/modules/auth/types';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-
   constructor(
     private reflector: Reflector,
     private jwtService: JwtService,
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -38,18 +37,13 @@ export class AuthGuard implements CanActivate {
       request.user = payload;
 
       return true;
-
     } catch (error) {
-
       throw new UnauthorizedException();
-
     }
-
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
   }
-
 }

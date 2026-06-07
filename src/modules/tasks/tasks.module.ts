@@ -10,6 +10,8 @@ import { TasksService } from './tasks.service';
 })
 export class TasksModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware, TokenMiddleware).forRoutes(TasksController);
+    consumer
+      .apply(LoggerMiddleware, TokenMiddleware)
+      .forRoutes(TasksController);
   }
 }

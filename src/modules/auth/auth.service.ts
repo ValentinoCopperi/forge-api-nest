@@ -1,10 +1,19 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Prisma } from 'generated/prisma/client';
 import { BCRYPT_ROUNDS, DEFAULT_ROLE } from '@/modules/auth/constants';
-import { LoginDto, RegisterDto, TokenResponseDto, UserResponseDto } from '@/modules/auth/dtos';
+import {
+  LoginDto,
+  RegisterDto,
+  TokenResponseDto,
+  UserResponseDto,
+} from '@/modules/auth/dtos';
 import {
   I_JwtPayload,
   UserWithRole,
@@ -18,12 +27,9 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) { }
-
+  ) {}
 
   async login(loginDto: LoginDto): Promise<TokenResponseDto> {
-
-
     const { email, password } = loginDto;
 
     const user = await this.prisma.user.findUnique({
@@ -42,7 +48,6 @@ export class AuthService {
     }
 
     return this.issueTokens(user);
-
   }
 
   async register(registerDto: RegisterDto): Promise<TokenResponseDto> {
@@ -76,26 +81,24 @@ export class AuthService {
     }
   }
 
-    async getMe(user: I_JwtPayload): Promise<UserResponseDto> {
+  async getMe(user: I_JwtPayload): Promise<UserResponseDto> {
+    const user_data = await this.prisma.user.findUnique({
+      where: { id: user.sub },
+      select: userWithRoleSelect,
+    });
 
-      const user_data = await this.prisma.user.findUnique({
-        where: { id: user.sub },
-        select: userWithRoleSelect,
-      });
-
-      if (!user_data) {
-        throw new UnauthorizedException('User not found');
-      }
-
-      return {
-        id: user_data.id,
-        name: user_data.name,
-        email: user_data.email,
-        avatarUrl: user_data.avatarUrl,
-        roles: user_data.UserRole.map(({ role }) => role),
-      };
-
+    if (!user_data) {
+      throw new UnauthorizedException('User not found');
     }
+
+    return {
+      id: user_data.id,
+      name: user_data.name,
+      email: user_data.email,
+      avatarUrl: user_data.avatarUrl,
+      roles: user_data.UserRole.map(({ role }) => role),
+    };
+  }
 
   private async issueTokens(user: UserWithRole): Promise<TokenResponseDto> {
     const payload = this.buildJwtPayload(user);

@@ -26,6 +26,9 @@ export class TasksController {
   @UsePipes(new ZodValidationPipe(createTaskSchema))
   @UseInterceptors(ResponseInterceptor)
   createTask(@Body() createTaskDto: CreateTaskDto) {
-    return this.tasksService.createTask({ title: createTaskDto.title, userId: 1 });
+    return this.tasksService.createTask({
+      title: createTaskDto.title,
+      userId: 1,
+    });
   }
 }
