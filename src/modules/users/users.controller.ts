@@ -24,10 +24,13 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
-
+import { ApiCommonErrors } from '@/shared/decorators';
+import { ApiTags } from '@nestjs/swagger';
 const AVATAR_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 const AVATAR_MIME_TYPES = /^image\/(jpeg|png|webp)$/;
 
+@ApiTags('Users')
+@ApiCommonErrors()
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

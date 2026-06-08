@@ -9,6 +9,7 @@ export const envValidationSchema = Joi.object({
   DATABASE_URL: Joi.string().required(),
   JWT_SECRET: Joi.string().min(8).required(),
   JWT_REFRESH_SECRET: Joi.string().min(8).required(),
+  CLIENT_URL: Joi.string().required(),
 
   POSTGRES_USER: Joi.string().required(),
   POSTGRES_PASSWORD: Joi.string().required(),
@@ -29,6 +30,7 @@ export const envValidationSchema = Joi.object({
   S3_SECRET_KEY: Joi.string().required(),
   S3_BUCKET: Joi.string().required(),
   S3_REGION: Joi.string().required(),
+  S3_PRESIGN_EXPIRES_IN: Joi.number().integer().positive().default(3600),
 
   REDIS_PORT: Joi.number().port().default(6379),
   REDIS_HOST: Joi.string().hostname().required(),

@@ -20,22 +20,25 @@ import {
   OrganizationsGetAll,
   organizationsGetAllSelect,
 } from '@/modules/organizations/types';
-import { PrismaService } from '@/shared';
+import { PrismaService, StorageService } from '@/shared';
 import { Prisma } from 'generated/prisma/client';
 import { OrganizationUserRole } from 'generated/prisma/enums';
 
 @Injectable()
 export class OrganizationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storageService: StorageService,
+  ) {}
 
-  create({
+  async create({
     createOrganizationDto,
     user,
   }: {
     createOrganizationDto: CreateOrganizationDto;
     user: UserRequest;
   }): Promise<OrganizationCreateResponse> {
-    return this.prisma.organization.create({
+    const organization = await this.prisma.organization.create({
       data: {
         ...createOrganizationDto,
         createdByUserId: user.sub,
@@ -48,12 +51,16 @@ export class OrganizationsService {
       },
       select: organizationCreateSelect,
     });
+
+    return this.storageService.signAvatarUrls(organization);
   }
 
-  findAll(): Promise<OrganizationsGetAll[]> {
-    return this.prisma.organization.findMany({
+  async findAll(): Promise<OrganizationsGetAll[]> {
+    const organizations = await this.prisma.organization.findMany({
       select: organizationsGetAllSelect,
     });
+
+    return this.storageService.signAvatarUrls(organizations);
   }
 
   async findOne(id: number): Promise<OrganizationFindOneResponse> {
@@ -66,7 +73,7 @@ export class OrganizationsService {
       throw new NotFoundException(`Organization with id ${id} not found`);
     }
 
-    return organization;
+    return this.storageService.signAvatarUrls(organization);
   }
 
   async addUserToOrganization(
@@ -178,7 +185,7 @@ export class OrganizationsService {
     user: UserRequest;
   }): Promise<OrganizationCreateResponse> {
     try {
-      return await this.prisma.organization.update({
+      const organization = await this.prisma.organization.update({
         where: { id },
         data: {
           ...updateOrganizationDto,
@@ -187,6 +194,8 @@ export class OrganizationsService {
         },
         select: organizationCreateSelect,
       });
+
+      return this.storageService.signAvatarUrls(organization);
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&

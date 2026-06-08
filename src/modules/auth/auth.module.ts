@@ -5,6 +5,7 @@ import { AuthController } from './auth.controller';
 import { AuthGuard } from './guards';
 import { JwtModule, JwtModuleOptions, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { StorageModule } from '@/shared/storage';
 
 @Module({
   controllers: [AuthController],
@@ -17,6 +18,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     },
   ],
   imports: [
+    StorageModule,
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],

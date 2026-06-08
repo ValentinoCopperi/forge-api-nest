@@ -20,14 +20,18 @@ import {
 import { Public, UserCurrent } from '@/modules/auth/decorators';
 import { I_JwtPayload } from '@/modules/auth/types';
 import {
+  AccessTokenResponseDto,
   LoginDto,
+  RefreshTokenDto,
   RegisterDto,
   TokenResponseDto,
   UserResponseDto,
 } from '@/modules/auth/dtos';
 import { AuthService } from './auth.service';
+import { ApiCommonErrors } from '@/shared/decorators';
 
 @ApiTags('Auth')
+@ApiCommonErrors()
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -67,6 +71,26 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
   login(@Body() loginDto: LoginDto): Promise<TokenResponseDto> {
     return this.authService.login(loginDto);
+  }
+
+  @Public()
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Refresh access token',
+    description: 'Issues a new access token using a valid refresh token.',
+  })
+  @ApiBody({ type: RefreshTokenDto })
+  @ApiOkResponse({
+    description: 'New access token issued successfully',
+    type: AccessTokenResponseDto,
+  })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or expired refresh token' })
+  refresh(
+    @Body() refreshTokenDto: RefreshTokenDto,
+  ): Promise<AccessTokenResponseDto> {
+    return this.authService.refresh(refreshTokenDto);
   }
 
   @Get('me')

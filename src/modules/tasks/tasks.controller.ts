@@ -11,7 +11,11 @@ import { ResponseInterceptor } from '@/shared/interceptors';
 import { CreateTaskDto, createTaskSchema } from '@/modules/tasks/dto';
 import { ZodValidationPipe } from '@/modules/tasks/pipes';
 import { TasksService } from './tasks.service';
+import { ApiCommonErrors } from '@/shared/decorators';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Tasks')
+@ApiCommonErrors()
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}

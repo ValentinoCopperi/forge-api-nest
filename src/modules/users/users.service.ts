@@ -2,13 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { StorageService } from '@/shared';
 import { PrismaService } from '@/shared/prisma/prisma.service';
 import { UserRequest } from '@/modules/auth/types/auth.jwt.types';
-import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class UsersService {
   constructor(
     private readonly storageService: StorageService,
     private readonly prismaService: PrismaService,
-    private readonly configService: ConfigService,
   ) {}
 
   async uploadAvatar(data: {
@@ -19,9 +17,7 @@ export class UsersService {
     const { sub, avatarUrl } = user;
 
     if (avatarUrl) {
-      const key = avatarUrl.split(
-        `${this.configService.getOrThrow<string>('S3_BUCKET')}/`,
-      )[1];
+      const key = this.storageService.extractKeyFromStoredUrl(avatarUrl);
       await this.storageService.deleteFile(key);
     }
 

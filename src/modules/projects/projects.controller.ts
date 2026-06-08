@@ -9,7 +9,11 @@ import {
 } from '@nestjs/common';
 import { CreateProjectDto, UpdateProjectDto } from '@/modules/projects/dto';
 import { ProjectsService } from './projects.service';
+import { ApiCommonErrors } from '@/shared/decorators';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Projects')
+@ApiCommonErrors()
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}

@@ -9,7 +9,9 @@ import * as bcrypt from 'bcrypt';
 import { Prisma } from 'generated/prisma/client';
 import { BCRYPT_ROUNDS, DEFAULT_ROLE } from '@/modules/auth/constants';
 import {
+  AccessTokenResponseDto,
   LoginDto,
+  RefreshTokenDto,
   RegisterDto,
   TokenResponseDto,
   UserResponseDto,
@@ -20,6 +22,7 @@ import {
   userWithRoleSelect,
 } from '@/modules/auth/types';
 import { PrismaService } from '@/shared/prisma';
+import { StorageService } from '@/shared/storage';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +30,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly storageService: StorageService,
   ) {}
 
   async login(loginDto: LoginDto): Promise<TokenResponseDto> {
@@ -81,6 +85,48 @@ export class AuthService {
     }
   }
 
+  async refresh(refreshTokenDto: RefreshTokenDto): Promise<AccessTokenResponseDto> {
+    const { refresh_token } = refreshTokenDto;
+
+    let payload: I_JwtPayload;
+
+    try {
+      payload = await this.jwtService.verifyAsync<I_JwtPayload>(refresh_token, {
+        secret: this.configService.getOrThrow<string>('auth.jwt.refreshSecret'),
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const session = await this.prisma.session.findUnique({
+      where: { token: refresh_token },
+    });
+
+    if (
+      !session ||
+      session.revoked ||
+      session.expiresAt < new Date() ||
+      session.userId !== payload.sub
+    ) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: userWithRoleSelect,
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const accessToken = await this.jwtService.signAsync(
+      this.buildJwtPayload(user),
+    );
+
+    return { accessToken };
+  }
+
   async getMe(user: I_JwtPayload): Promise<UserResponseDto> {
     const user_data = await this.prisma.user.findUnique({
       where: { id: user.sub },
@@ -95,7 +141,9 @@ export class AuthService {
       id: user_data.id,
       name: user_data.name,
       email: user_data.email,
-      avatarUrl: user_data.avatarUrl,
+      avatarUrl: await this.storageService.resolveAvatarUrl(
+        user_data.avatarUrl,
+      ),
       roles: user_data.UserRole.map(({ role }) => role),
     };
   }

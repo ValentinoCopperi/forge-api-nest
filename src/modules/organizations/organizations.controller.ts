@@ -41,7 +41,11 @@ import {
 } from '@/modules/organizations/types';
 import { OrganizationActionGuard } from './guards/organization.action.guard';
 import { RequireOrgAction } from './decorators/action.decorator';
+import { ApiCommonErrors } from '@/shared/decorators';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Organizations')
+@ApiCommonErrors()
 @UseGuards(RolesGuard, OrganizationActionGuard)
 @Controller('organizations')
 export class OrganizationsController {

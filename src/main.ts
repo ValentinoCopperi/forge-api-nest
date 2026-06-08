@@ -13,6 +13,12 @@ const GLOBAL_PREFIX = '/api/v1';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestApplication>(AppModule);
+  const configService = app.get(ConfigService);
+
+  app.enableCors({
+    origin: configService.get<string>('CLIENT_URL'),
+    credentials: true,
+  });
 
   app.setGlobalPrefix(GLOBAL_PREFIX);
 
@@ -35,7 +41,6 @@ async function bootstrap() {
   const rateLimitMiddleware = app.get(RateLimitMiddleware);
   app.use(rateLimitMiddleware.use.bind(rateLimitMiddleware));
 
-  const configService = app.get(ConfigService);
   const port = configService.get<number>('APP_PORT', 3000);
 
   const config = new DocumentBuilder()
@@ -54,8 +59,12 @@ async function bootstrap() {
     )
     .build();
 
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, documentFactory);
+  const documentFactory = () =>
+    SwaggerModule.createDocument(app, config)
+
+    SwaggerModule.setup('docs', app, documentFactory, {
+      jsonDocumentUrl: 'docs/openapi.json',
+  });
 
   await app.listen(port);
 }

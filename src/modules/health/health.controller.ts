@@ -3,7 +3,11 @@ import { ApiResponse } from '@nestjs/swagger';
 import { Public } from '@/modules/auth/decorators';
 import { HealthCheckResponseDto } from '@/modules/health/dto';
 import { HealthService } from './health.service';
+import { ApiCommonErrors } from '@/shared/decorators';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Health')
+@ApiCommonErrors()
 @Controller()
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}
