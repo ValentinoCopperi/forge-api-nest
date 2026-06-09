@@ -11,7 +11,6 @@ import { BCRYPT_ROUNDS, DEFAULT_ROLE } from '@/modules/auth/constants';
 import {
   AccessTokenResponseDto,
   LoginDto,
-  RefreshTokenDto,
   RegisterDto,
   TokenResponseDto,
   UserResponseDto,
@@ -33,7 +32,7 @@ export class AuthService {
     private readonly storageService: StorageService,
   ) {}
 
-  async login(loginDto: LoginDto): Promise<TokenResponseDto> {
+  async login(loginDto: LoginDto): Promise<{ accessToken: string; refreshToken: string }> {
     const { email, password } = loginDto;
 
     const user = await this.prisma.user.findUnique({
@@ -85,13 +84,15 @@ export class AuthService {
     }
   }
 
-  async refresh(refreshTokenDto: RefreshTokenDto): Promise<AccessTokenResponseDto> {
-    const { refresh_token } = refreshTokenDto;
+  async refresh(refreshToken: string): Promise<AccessTokenResponseDto> {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
 
     let payload: I_JwtPayload;
 
     try {
-      payload = await this.jwtService.verifyAsync<I_JwtPayload>(refresh_token, {
+      payload = await this.jwtService.verifyAsync<I_JwtPayload>(refreshToken, {
         secret: this.configService.getOrThrow<string>('auth.jwt.refreshSecret'),
       });
     } catch {
@@ -99,7 +100,7 @@ export class AuthService {
     }
 
     const session = await this.prisma.session.findUnique({
-      where: { token: refresh_token },
+      where: { token: refreshToken },
     });
 
     if (
@@ -127,6 +128,17 @@ export class AuthService {
     return { accessToken };
   }
 
+  async logout(refreshToken: string): Promise<void> {
+    if (!refreshToken) {
+      return;
+    }
+
+    await this.prisma.session.updateMany({
+      where: { token: refreshToken, revoked: false },
+      data: { revoked: true },
+    });
+  }
+
   async getMe(user: I_JwtPayload): Promise<UserResponseDto> {
     const user_data = await this.prisma.user.findUnique({
       where: { id: user.sub },
@@ -148,7 +160,7 @@ export class AuthService {
     };
   }
 
-  private async issueTokens(user: UserWithRole): Promise<TokenResponseDto> {
+  private async issueTokens(user: UserWithRole): Promise<{ accessToken: string; refreshToken: string }> {
     const payload = this.buildJwtPayload(user);
     const refreshExpiresIn = this.configService.getOrThrow<string>(
       'auth.jwt.refreshExpiresIn',

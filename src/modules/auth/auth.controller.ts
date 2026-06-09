@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Res,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -22,19 +23,30 @@ import { I_JwtPayload } from '@/modules/auth/types';
 import {
   AccessTokenResponseDto,
   LoginDto,
-  RefreshTokenDto,
   RegisterDto,
   TokenResponseDto,
   UserResponseDto,
 } from '@/modules/auth/dtos';
+import { REFRESH_TOKEN_COOKIE_PATH } from '@/modules/auth/constants';
 import { AuthService } from './auth.service';
-import { ApiCommonErrors } from '@/shared/decorators';
+import { ApiCommonErrors, Cookies } from '@/shared/decorators';
+import { CookieOptions, Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Auth')
 @ApiCommonErrors()
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService, private readonly configService: ConfigService) {}
+
+  private getRefreshTokenCookieOptions(): CookieOptions {
+    return {
+      httpOnly: true,
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      sameSite: 'lax',
+      path: REFRESH_TOKEN_COOKIE_PATH,
+    };
+  }
 
   @Public()
   @Post('register')
@@ -69,8 +81,19 @@ export class AuthController {
   })
   @ApiBadRequestResponse({ description: 'Invalid request body' })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
-  login(@Body() loginDto: LoginDto): Promise<TokenResponseDto> {
-    return this.authService.login(loginDto);
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<TokenResponseDto> {
+    const { accessToken , refreshToken } = await this.authService.login(loginDto);
+
+    res.cookie('refresh_token', refreshToken, {
+      ...this.getRefreshTokenCookieOptions(),
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return { accessToken };
+
   }
 
   @Public()
@@ -80,17 +103,31 @@ export class AuthController {
     summary: 'Refresh access token',
     description: 'Issues a new access token using a valid refresh token.',
   })
-  @ApiBody({ type: RefreshTokenDto })
   @ApiOkResponse({
     description: 'New access token issued successfully',
     type: AccessTokenResponseDto,
   })
-  @ApiBadRequestResponse({ description: 'Invalid request body' })
   @ApiUnauthorizedResponse({ description: 'Invalid or expired refresh token' })
   refresh(
-    @Body() refreshTokenDto: RefreshTokenDto,
+    @Cookies('refresh_token') refresh_token: string,
   ): Promise<AccessTokenResponseDto> {
-    return this.authService.refresh(refreshTokenDto);
+    return this.authService.refresh(refresh_token);
+  }
+
+  @Public()
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Sign out',
+    description: 'Revokes the current session and clears the refresh token cookie.',
+  })
+  @ApiOkResponse({ description: 'User signed out successfully' })
+  async logout(
+    @Cookies('refresh_token') refresh_token: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    await this.authService.logout(refresh_token);
+    res.clearCookie('refresh_token', this.getRefreshTokenCookieOptions());
   }
 
   @Get('me')

@@ -8,6 +8,7 @@ import {
   RateLimitMiddleware,
   RequestIdMiddleware,
 } from '@/shared';
+import cookieParser from 'cookie-parser';
 
 const GLOBAL_PREFIX = '/api/v1';
 
@@ -19,6 +20,8 @@ async function bootstrap() {
     origin: configService.get<string>('CLIENT_URL'),
     credentials: true,
   });
+
+  app.use(cookieParser());
 
   app.setGlobalPrefix(GLOBAL_PREFIX);
 
