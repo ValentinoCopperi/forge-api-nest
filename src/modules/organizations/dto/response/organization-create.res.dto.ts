@@ -38,6 +38,20 @@ export class OrganizationCreateResponseDto implements OrganizationCreateResponse
   updatedAt: Date;
 
   @ApiProperty({
+    description: 'The logo url of the organization',
+    type: String,
+    nullable: true,
+  })
+  logoUrl: string | null;
+
+  @ApiProperty({
+    description: 'The banner url of the organization',
+    type: String,
+    nullable: true,
+  })
+  bannerUrl: string | null;
+
+  @ApiProperty({
     description: 'The user who created the organization',
     type: OrganizationUserResponseDto,
   })

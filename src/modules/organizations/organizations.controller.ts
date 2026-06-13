@@ -10,6 +10,12 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+  UploadedFile,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { Role } from 'generated/prisma/enums';
 import { Roles, UserCurrent } from '@/modules/auth/decorators';
@@ -28,10 +34,12 @@ import { OrganizationsService } from './organizations.service';
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiResponse,
 } from '@nestjs/swagger';
 import { UserRequest } from '@/modules/auth/types';
 import {
@@ -43,13 +51,15 @@ import { OrganizationActionGuard } from './guards/organization.action.guard';
 import { RequireOrgAction } from './decorators/action.decorator';
 import { ApiCommonErrors } from '@/shared/decorators';
 import { ApiTags } from '@nestjs/swagger';
+import { AVATAR_MAX_SIZE_BYTES, AVATAR_MIME_TYPES } from '@/shared/constants';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Organizations')
 @ApiCommonErrors()
 @UseGuards(RolesGuard, OrganizationActionGuard)
 @Controller('organizations')
 export class OrganizationsController {
-  constructor(private readonly organizationsService: OrganizationsService) {}
+  constructor(private readonly organizationsService: OrganizationsService) { }
 
   @Post()
   @Roles([Role.DIRECTOR])
@@ -133,6 +143,12 @@ export class OrganizationsController {
 
   @Patch(':id')
   @RequireOrgAction('update')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'logoFile', maxCount: 1 },
+      { name: 'bannerFile', maxCount: 1 },
+    ]),
+  )
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Update an organization' })
   @ApiParam({
@@ -141,17 +157,35 @@ export class OrganizationsController {
     description: 'The id of the organization',
     example: 1,
   })
-  @ApiBody({ type: UpdateOrganizationDto })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'My Organization' },
+        description: { type: 'string', example: 'Description' },
+        logoFile: { type: 'string', format: 'binary' },
+        bannerFile: { type: 'string', format: 'binary' },
+      },
+    },
+  })
   @ApiOkResponse({ type: OrganizationCreateResponseDto })
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateOrganizationDto: UpdateOrganizationDto,
     @UserCurrent() user: UserRequest,
+    @UploadedFiles()
+    files: {
+      logoFile?: Express.Multer.File[];
+      bannerFile?: Express.Multer.File[];
+    },
   ): Promise<OrganizationCreateResponse> {
     return this.organizationsService.update({
       id,
       updateOrganizationDto,
       user,
+      logoFile: files?.logoFile?.[0],
+      bannerFile: files?.bannerFile?.[0],
     });
   }
 

@@ -47,6 +47,15 @@ export class StorageService {
     return storedUrl.slice(markerIndex + marker.length);
   }
 
+  createOrganizationAssetKey(
+    organizationId: number,
+    asset: 'logo' | 'banner',
+    fileName: string,
+  ): string {
+    const ext = fileName.split('.').pop()?.toLowerCase() ?? 'bin';
+    return `organizations/${organizationId}/${asset}.${ext}`;
+  }
+
   async uploadFile(file: Express.Multer.File, key: string): Promise<string> {
     try {
       const command = new PutObjectCommand({

@@ -9,6 +9,8 @@ export const organizationCreateSelect = {
   description: true,
   createdAt: true,
   updatedAt: true,
+  logoUrl: true,
+  bannerUrl: true,
   User_Organization_createdByUserIdToUser: {
     select: {
       id: true,

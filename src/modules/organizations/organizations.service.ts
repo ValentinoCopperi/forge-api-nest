@@ -29,7 +29,7 @@ export class OrganizationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
-  ) {}
+  ) { }
 
   async create({
     createOrganizationDto,
@@ -179,18 +179,43 @@ export class OrganizationsService {
     id,
     updateOrganizationDto,
     user,
+    logoFile,
+    bannerFile,
   }: {
     id: number;
     updateOrganizationDto: UpdateOrganizationDto;
     user: UserRequest;
+    logoFile: Express.Multer.File | undefined;
+    bannerFile: Express.Multer.File | undefined;
   }): Promise<OrganizationCreateResponse> {
+
+
+
     try {
+
+      let logoUrl: string | undefined;
+      let bannerUrl: string | undefined;
+
+      if (logoFile) {
+        const key = this.storageService.createOrganizationAssetKey(id, 'logo', logoFile.originalname);
+        const url = await this.storageService.uploadFile(logoFile, key);
+        logoUrl = url;
+      }
+
+      if (bannerFile) {
+        const key = this.storageService.createOrganizationAssetKey(id, 'banner', bannerFile.originalname);
+        const url = await this.storageService.uploadFile(bannerFile, key);
+        bannerUrl = url;
+      }
+
       const organization = await this.prisma.organization.update({
         where: { id },
         data: {
           ...updateOrganizationDto,
           updatedByUserId: user.sub,
           updatedAt: new Date(),
+          logoUrl,
+          bannerUrl,
         },
         select: organizationCreateSelect,
       });

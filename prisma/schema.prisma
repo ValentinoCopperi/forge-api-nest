@@ -14,6 +14,8 @@ model Organization {
   updatedAt                               DateTime           @default(now())
   createdAt                               DateTime           @default(now())
   createdByUserId                         Int
+  logoUrl                                 String?
+  bannerUrl                               String?
   deletedAt                               DateTime?
   updatedByUserId                         Int?
   User_Organization_createdByUserIdToUser User               @relation("Organization_createdByUserIdToUser", fields: [createdByUserId], references: [id])

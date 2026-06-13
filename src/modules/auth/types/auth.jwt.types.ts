@@ -5,6 +5,7 @@ export interface I_JwtPayload {
   email: string;
   avatarUrl: string | null;
   roles: $Enums.Role[];
+  jti?: string;
 }
 
 export type UserRequest = I_JwtPayload;

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   ConflictException,
   Injectable,
@@ -168,10 +169,13 @@ export class AuthService {
 
     const accessToken = await this.jwtService.signAsync(payload);
 
-    const refreshToken = await this.jwtService.signAsync(payload, {
-      secret: this.configService.getOrThrow<string>('auth.jwt.refreshSecret'),
-      expiresIn: refreshExpiresIn as JwtSignOptions['expiresIn'],
-    });
+    const refreshToken = await this.jwtService.signAsync(
+      { ...payload, jti: randomUUID() },
+      {
+        secret: this.configService.getOrThrow<string>('auth.jwt.refreshSecret'),
+        expiresIn: refreshExpiresIn as JwtSignOptions['expiresIn'],
+      },
+    );
 
     await this.prisma.session.create({
       data: {
