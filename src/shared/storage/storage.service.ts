@@ -10,6 +10,8 @@ import { ConfigService } from '@nestjs/config';
 
 const DEFAULT_PRESIGN_EXPIRES_IN_SECONDS = 3600;
 
+const STORAGE_URL_FIELDS = new Set(['avatarUrl', 'logoUrl', 'bannerUrl']);
+
 @Injectable()
 export class StorageService {
   private readonly s3: S3Client;
@@ -125,7 +127,7 @@ export class StorageService {
       const entries = await Promise.all(
         Object.entries(record).map(async ([key, entryValue]) => {
           if (
-            key === 'avatarUrl' &&
+            STORAGE_URL_FIELDS.has(key) &&
             (typeof entryValue === 'string' || entryValue === null)
           ) {
             return [key, await this.resolveAvatarUrl(entryValue)];

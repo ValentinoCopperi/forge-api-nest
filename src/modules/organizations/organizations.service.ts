@@ -18,6 +18,8 @@ import {
   OrganizationFindOneResponse,
   organizationFindOneSelect,
   OrganizationsGetAll,
+  OrganizationsGetAllByUserId,
+  organizationsGetAllByUserIdSelect,
   organizationsGetAllSelect,
 } from '@/modules/organizations/types';
 import { PrismaService, StorageService } from '@/shared';
@@ -248,5 +250,21 @@ export class OrganizationsService {
 
       throw error;
     }
+  }
+
+  async findAllByUserId(userId: number): Promise<OrganizationsGetAllByUserId[]> {
+
+    const organizations = await this.prisma.organization.findMany({
+      where: {
+        OrganizationUser: {
+          some: {
+            userId: userId,
+          },
+        },
+      },
+      select: organizationsGetAllByUserIdSelect,
+    });
+
+    return this.storageService.signAvatarUrls(organizations);
   }
 }

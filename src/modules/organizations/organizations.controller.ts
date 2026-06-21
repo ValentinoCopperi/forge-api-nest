@@ -25,7 +25,8 @@ import {
   CreateOrganizationDto,
   OrganizationCreateResponseDto,
   OrganizationFindOneResponseDto,
-  OrganizationsGetAllResponseDto,
+  OrganizationOfUserResponseDto,
+  OrganizationsGetAllListResponseDto,
   RemoveUserFromOrganizationDto,
   UpdateOrganizationDto,
   UpdateUserOrganizationRoleDto,
@@ -46,6 +47,7 @@ import {
   OrganizationCreateResponse,
   OrganizationFindOneResponse,
   OrganizationsGetAll,
+  OrganizationsGetAllByUserId,
 } from '@/modules/organizations/types';
 import { OrganizationActionGuard } from './guards/organization.action.guard';
 import { RequireOrgAction } from './decorators/action.decorator';
@@ -53,6 +55,7 @@ import { ApiCommonErrors } from '@/shared/decorators';
 import { ApiTags } from '@nestjs/swagger';
 import { AVATAR_MAX_SIZE_BYTES, AVATAR_MIME_TYPES } from '@/shared/constants';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
+
 
 @ApiTags('Organizations')
 @ApiCommonErrors()
@@ -78,7 +81,7 @@ export class OrganizationsController {
   @Get()
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get all organizations' })
-  @ApiOkResponse({ type: OrganizationsGetAllResponseDto, isArray: true })
+  @ApiOkResponse({ type: OrganizationsGetAllListResponseDto })
   findAll(): Promise<OrganizationsGetAll[]> {
     return this.organizationsService.findAll();
   }
@@ -123,6 +126,16 @@ export class OrganizationsController {
     return this.organizationsService.updateUserOrganizationRole(
       updateUserOrganizationRoleDto,
     );
+  }
+
+  @Get('user')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get all organizations of the current user' })
+  @ApiOkResponse({ type: OrganizationOfUserResponseDto })
+  findAllByUserId(
+    @UserCurrent() user: UserRequest,
+  ): Promise<OrganizationsGetAllByUserId[]> {
+    return this.organizationsService.findAllByUserId(user.sub);
   }
 
   @Get(':id')

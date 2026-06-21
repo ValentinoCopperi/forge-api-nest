@@ -7,19 +7,32 @@ import {
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+type InterceptorResponse<T> = T extends readonly unknown[]
+  ? { data: T; timestamp: Date }
+  : T & { timestamp: Date };
+
 @Injectable()
 export class ResponseInterceptor<
   T extends object = object,
-> implements NestInterceptor<T, T & { timestamp: Date }> {
+> implements NestInterceptor<T, InterceptorResponse<T>> {
   intercept(
     _context: ExecutionContext,
     next: CallHandler<T>,
-  ): Observable<T & { timestamp: Date }> {
+  ): Observable<InterceptorResponse<T>> {
     return next.handle().pipe(
-      map((data) => ({
-        ...data,
-        timestamp: new Date(),
-      })),
+      map((data) => {
+        if (Array.isArray(data)) {
+          return {
+            data,
+            timestamp: new Date(),
+          } as InterceptorResponse<T>;
+        }
+
+        return {
+          ...data,
+          timestamp: new Date(),
+        } as InterceptorResponse<T>;
+      }),
     );
   }
 }

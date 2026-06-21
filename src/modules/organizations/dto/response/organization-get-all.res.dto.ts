@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { createArrayResponseDto } from '@/shared/dto';
 import { OrganizationsGetAll } from '@/modules/organizations/types';
 import { OrganizationCreateResponseDto } from './organization-create.res.dto';
 
@@ -28,3 +29,8 @@ export class OrganizationsGetAllResponseDto
   })
   _count: OrganizationCountResponseDto;
 }
+
+export const OrganizationsGetAllListResponseDto = createArrayResponseDto(
+  OrganizationsGetAllResponseDto,
+  'OrganizationsGetAllListResponseDto',
+);
