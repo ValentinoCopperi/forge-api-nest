@@ -7,4 +7,4 @@ export * from './response/organization-user.res.dto';
 export * from './response/organization-create.res.dto';
 export * from './response/organization-get-all.res.dto';
 export * from './response/organization-find-one.res.dto';
-export * from './response/organization-of-user.res.dto';
+export * from './response/organization-get-all-by-user.res.dto';

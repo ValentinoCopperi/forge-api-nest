@@ -21,12 +21,16 @@ import { UserRequest } from '@/modules/auth/types/auth.jwt.types';
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiOkResponse,
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
 import { ApiCommonErrors } from '@/shared/decorators';
 import { ApiTags } from '@nestjs/swagger';
 import { AVATAR_MAX_SIZE_BYTES , AVATAR_MIME_TYPES } from '@/shared/constants';
+import { GetAllUsersResponseDto } from './dto/response/get-all-users.dto';
+import { createArrayResponseDto } from '@/shared/dto';
+import { UserGetAll } from './types';
 
 @ApiTags('Users')
 @ApiCommonErrors()
@@ -68,5 +72,14 @@ export class UsersController {
     @UserCurrent() user: UserRequest,
   ): Promise<void> {
     return this.usersService.uploadAvatar({ user, file });
+  }
+
+
+  @Get()
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiOkResponse({ type: createArrayResponseDto(GetAllUsersResponseDto) })
+  findAll(): Promise<GetAllUsersResponseDto[]> {
+    return this.usersService.getAll();
   }
 }

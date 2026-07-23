@@ -25,7 +25,7 @@ import {
   CreateOrganizationDto,
   OrganizationCreateResponseDto,
   OrganizationFindOneResponseDto,
-  OrganizationOfUserResponseDto,
+  OrganizationsGetAllByUserListResponseDto,
   OrganizationsGetAllListResponseDto,
   RemoveUserFromOrganizationDto,
   UpdateOrganizationDto,
@@ -86,6 +86,8 @@ export class OrganizationsController {
     return this.organizationsService.findAll();
   }
 
+  
+
   @Post('add-user')
   @RequireOrgAction('add-user')
   @ApiBearerAuth('access-token')
@@ -131,7 +133,7 @@ export class OrganizationsController {
   @Get('user')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get all organizations of the current user' })
-  @ApiOkResponse({ type: OrganizationOfUserResponseDto })
+  @ApiOkResponse({ type: OrganizationsGetAllByUserListResponseDto })
   findAllByUserId(
     @UserCurrent() user: UserRequest,
   ): Promise<OrganizationsGetAllByUserId[]> {

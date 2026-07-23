@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { StorageService } from '@/shared';
 import { PrismaService } from '@/shared/prisma/prisma.service';
 import { UserRequest } from '@/modules/auth/types/auth.jwt.types';
+import { GetAllUsersResponseDto } from './dto/response/get-all-users.dto';
+import { userGetAllSelect } from './types';
 @Injectable()
 export class UsersService {
   constructor(
@@ -28,5 +30,12 @@ export class UsersService {
       where: { id: sub },
       data: { avatarUrl: url },
     });
+  }
+
+  async getAll(): Promise<GetAllUsersResponseDto[]> {
+    const users = await this.prismaService.user.findMany({
+      select: userGetAllSelect,
+    });
+    return users;
   }
 }

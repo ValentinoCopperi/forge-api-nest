@@ -19,7 +19,6 @@ import {
   organizationFindOneSelect,
   OrganizationsGetAll,
   OrganizationsGetAllByUserId,
-  organizationsGetAllByUserIdSelect,
   organizationsGetAllSelect,
 } from '@/modules/organizations/types';
 import { PrismaService, StorageService } from '@/shared';
@@ -253,17 +252,20 @@ export class OrganizationsService {
   }
 
   async findAllByUserId(userId: number): Promise<OrganizationsGetAllByUserId[]> {
-
-    const organizations = await this.prisma.organization.findMany({
-      where: {
-        OrganizationUser: {
-          some: {
-            userId: userId,
-          },
+    const memberships = await this.prisma.organizationUser.findMany({
+      where: { userId },
+      select: {
+        role: true,
+        Organization: {
+          select: organizationsGetAllSelect,
         },
       },
-      select: organizationsGetAllByUserIdSelect,
     });
+
+    const organizations = memberships.map(({ role, Organization }) => ({
+      ...Organization,
+      role,
+    }));
 
     return this.storageService.signAvatarUrls(organizations);
   }

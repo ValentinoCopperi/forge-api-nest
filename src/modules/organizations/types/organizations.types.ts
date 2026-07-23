@@ -93,16 +93,8 @@ export type OrganizationsGetAll = Prisma.OrganizationGetPayload<{
   select: typeof organizationsGetAllSelect;
 }>;
 
-
-/*
-    Response type for the organizations get all by user id operation
-*/
-export const organizationsGetAllByUserIdSelect = {
-  id : true,
-  name : true,
-  logoUrl : true,
-} satisfies Prisma.OrganizationSelect;
-
-export type OrganizationsGetAllByUserId = Prisma.OrganizationGetPayload<{
-  select: typeof organizationsGetAllByUserIdSelect;
-}>;
+export type OrganizationsGetAllByUserId = OrganizationsGetAll & {
+  role: Prisma.OrganizationUserGetPayload<{
+    select: { role: true };
+  }>['role'];
+};
